@@ -1,24 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize state
     let currentDate = new Date(2024, 2); // March 2024
-    let monthlyBalance = 4000.00;
     let transactions = [];
+    let pieChart = null;
     
-    // Initialize transaction balances
-    let transactionBalances = {
-        'Flex-Spending': 1000.00,
-        'Rent': 1000.00,
-        'Gas': 1000.00,
-        'Groceries': 1000.00
-    };
-    
-    // Get DOM elements
-    const monthDisplay = document.querySelector('.march-2024');
-    const balanceDisplay = document.querySelector('.b');
-    const previousButtons = document.querySelectorAll('.previous-icon, .previous-icon1');
-    const ctx = document.getElementById('budgetPieChart').getContext('2d');
-    
-    // Define colors and icons
+    // Define colors and icons (keep existing definitions)
     const categoryColors = {
         'Groceries': '#4ECDC4',
         'Rent': '#96CEB4',
@@ -34,200 +20,118 @@ document.addEventListener('DOMContentLoaded', function() {
         'Entertainment': 'Party Hat.png',
         'Flex-Spending': 'Party Hat.png'
     };
-    
-    // Initialize pie chart
-    let pieChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(categoryColors),
+
+    function initializePieChart() {
+        const ctx = document.getElementById('budgetPieChart').getContext('2d');
+        const savedBudgets = JSON.parse(localStorage.getItem('categoryBudgets')) || {};
+        
+        // Calculate spending for each category
+        const categorySpending = {};
+        transactions.forEach(transaction => {
+            if (!categorySpending[transaction.category]) {
+                categorySpending[transaction.category] = 0;
+            }
+            categorySpending[transaction.category] += parseFloat(transaction.amount);
+        });
+
+        // Prepare data for the chart
+        const labels = Object.keys(savedBudgets);
+        const data = {
+            labels: labels,
             datasets: [{
-                data: Object.values(transactionBalances),
+                data: labels.map((category, index) => savedBudgets[category]),
                 backgroundColor: Object.values(categoryColors),
                 borderWidth: 1
             }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+        };
+
+        // Destroy existing chart if it exists
+        if (pieChart) {
+            pieChart.destroy();
+        }
+
+        // Create new chart
+        pieChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const category = context.label;
+                                const totalBudget = savedBudgets[category];
+                                const spent = categorySpending[category] || 0;
+                                const remaining = totalBudget - spent;
+                                return [
+                                    `${category}:`,
+                                    `Budget: $${totalBudget.toFixed(2)}`,
+                                    `Spent: $${spent.toFixed(2)}`,
+                                    `Remaining: $${remaining.toFixed(2)}`
+                                ];
+                            }
+                        }
+                    }
                 }
             }
-        }
-    });
-    
-    // Format currency function
-    const formatCurrency = (amount) => {
-        return `-$${Math.abs(parseFloat(amount)).toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        })}`;
-    };
-    
-    // Update month display
-    const updateMonth = () => {
-        const monthYear = currentDate.toLocaleString('default', { 
-            month: 'long', 
-            year: 'numeric' 
         });
-        monthDisplay.textContent = monthYear;
-    };
-    
-    // Format date
-    function formatDate(date) {
-        return new Date(date).toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-        });
+
+        // Update total spent display
+        const totalSpent = Object.values(categorySpending).reduce((sum, val) => sum + val, 0);
+        const totalBudget = Object.values(savedBudgets).reduce((sum, val) => sum + val, 0);
+        document.getElementById('totalSpent').textContent = `$${totalSpent.toFixed(2)} / $${totalBudget.toFixed(2)}`;
     }
-    
-    // Create category element
-    function createCategoryElement(category) {
-        return `
-            <div class="flex-spending">
-                <div class="ellipse-parent">
-                    <div class="group-child" style="background-color: ${categoryColors[category]}"></div>
-                    <img class="party-hat-icon" alt="" src="${categoryIcons[category]}">
-                </div>
-                <b class="${category.toLowerCase().replace('-', '')}">${category}</b>
-            </div>
-        `;
-    }
-    
-    // Update recent transactions
-    function updateRecentTransactions(newTransaction) {
-        // Get containers
-        const datesContainer = document.querySelector('.dates');
-        const namesContainer = document.querySelector('.name');
-        const categoriesContainer = document.querySelector('.category');
-        const amountsContainer = document.querySelector('.amounts');
-    
-        // Create new elements
-        const dateDiv = document.createElement('div');
-        dateDiv.className = 'march-22-2024';
-        dateDiv.textContent = formatDate(newTransaction.date);
-    
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'bowlero-fun-station';
-        nameDiv.textContent = newTransaction.name;
-    
-        const categoryDiv = document.createElement('div');
-        categoryDiv.innerHTML = createCategoryElement(newTransaction.category);
-    
-        const amountDiv = document.createElement('div');
-        amountDiv.className = 'amount';
-        amountDiv.innerHTML = `
-            <div class="amount-child"></div>
-            <b class="b">${formatCurrency(newTransaction.amount)}</b>
-        `;
-    
-        // Insert after header function
-        function insertAfterHeader(container, newElement) {
-            const header = container.querySelector('b');
-            if (header && header.nextSibling) {
-                container.insertBefore(newElement, header.nextSibling);
-            } else {
-                container.appendChild(newElement);
-            }
-        }
-    
-        // Insert new elements
-        insertAfterHeader(datesContainer, dateDiv);
-        insertAfterHeader(namesContainer, nameDiv);
-        insertAfterHeader(categoriesContainer, categoryDiv);
-        insertAfterHeader(amountsContainer, amountDiv);
-    
-        // Remove oldest if more than 5
-        const maxTransactions = 5;
-        [datesContainer, namesContainer, categoriesContainer, amountsContainer].forEach(container => {
-            const items = container.children;
-            if (items.length > maxTransactions + 1) {
-                container.removeChild(items[items.length - 1]);
-            }
-        });
-    }
-    
-    // Update pie chart
-    function updatePieChart(transaction) {
-        const categoryIndex = Object.keys(categoryColors).indexOf(transaction.category);
-        if (categoryIndex !== -1) {
-            pieChart.data.datasets[0].data[categoryIndex] += parseFloat(transaction.amount);
-            pieChart.update();
-            
-            // Update transaction balances
-            transactionBalances[transaction.category] += parseFloat(transaction.amount);
-        }
-    }
-    
-    // Update balance display
-    const updateBalanceDisplay = () => {
-        const totalTransactions = Object.values(transactionBalances)
-            .reduce((acc, curr) => acc + curr, 0);
-        monthlyBalance = 4000 - totalTransactions;
-        balanceDisplay.textContent = formatCurrency(monthlyBalance);
-    };
-    
-    // Show transaction detail popup
-    const showTransactionDetail = (category, amount, date) => {
-        const popup = document.createElement('div');
-        popup.className = 'transaction-popup';
-        popup.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        `;
-        
-        popup.innerHTML = `
-            <h3>${category}</h3>
-            <p>Amount: ${amount}</p>
-            <p>Date: ${formatDate(date)}</p>
-            <button onclick="this.parentElement.remove()">Close</button>
-        `;
-        
-        document.body.appendChild(popup);
-    };
-    
+
     // Handle form submission
     const submitButton = document.querySelector('.submit');
+    const transactionForm = {
+        date: document.querySelector('.date-inpurt input[type="date"]'),
+        amount: document.querySelector('.amount-input input[type="number"]'),
+        name: document.querySelector('.name-input input'),
+        category: document.querySelector('.cateogry-input select')
+    };
+
     submitButton.addEventListener('click', function(e) {
         e.preventDefault();
-    
-        // Get form values
-        const dateInput = document.querySelector('input[type="date"]');
-        const amountInput = document.querySelector('input[type="number"]');
-        const nameInput = document.querySelector('.name-input-child');
-        const categorySelect = document.querySelector('.cateogry-input select');
-    
+
+        // Log form values for debugging
+        console.log('Form Values:', {
+            date: transactionForm.date.value,
+            amount: transactionForm.amount.value,
+            name: transactionForm.name.value,
+            category: transactionForm.category.value
+        });
+
         // Validate form
-        if (!dateInput.value || !amountInput.value || !nameInput.value || !categorySelect.value) {
+        if (!transactionForm.date.value || 
+            !transactionForm.amount.value || 
+            !transactionForm.name.value || 
+            !transactionForm.category.value) {
             alert('Please fill in all fields');
             return;
         }
-    
+
         // Create transaction object
         const newTransaction = {
-            date: dateInput.value,
-            amount: parseFloat(amountInput.value),
-            name: nameInput.value,
-            category: categorySelect.value
+            date: transactionForm.date.value,
+            amount: parseFloat(transactionForm.amount.value),
+            name: transactionForm.name.value,
+            category: transactionForm.category.value
         };
-    
+
         // Add to transactions array
         transactions.push(newTransaction);
-    
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+
         // Update displays
         updateRecentTransactions(newTransaction);
-        updatePieChart(newTransaction);
-        updateBalanceDisplay();
-    
+        initializePieChart();
+
         // Show success message
         const successMessage = document.createElement('div');
         successMessage.className = 'success-message';
@@ -244,104 +148,96 @@ document.addEventListener('DOMContentLoaded', function() {
             animation: fadeOut 3s forwards;
         `;
         document.body.appendChild(successMessage);
-    
+
         // Remove success message after animation
         setTimeout(() => {
             successMessage.remove();
         }, 3000);
-    
-        // Clear form
-        dateInput.value = '';
-        amountInput.value = '';
-        nameInput.value = '';
-        categorySelect.value = '';
+
+        // Reset form
+        transactionForm.date.value = '';
+        transactionForm.amount.value = '';
+        transactionForm.name.value = '';
+        transactionForm.category.value = '';
     });
-    
-    // Set up month navigation
-    previousButtons.forEach((button, index) => {
-        button.addEventListener('click', () => {
-            if (index === 0) {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-            } else {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-            }
-            updateMonth();
+
+    // Update recent transactions display
+    function updateRecentTransactions(newTransaction) {
+        const datesContainer = document.querySelector('.dates');
+        const namesContainer = document.querySelector('.name');
+        const categoriesContainer = document.querySelector('.category');
+        const amountsContainer = document.querySelector('.amounts');
+
+        // Create new elements
+        const dateDiv = document.createElement('div');
+        dateDiv.className = 'march-22-2024';
+        dateDiv.textContent = new Date(newTransaction.date).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
         });
-    });
-    
-    // Style right arrow
-    const rightArrow = document.querySelector('.previous-icon1');
-    if (rightArrow) {
-        rightArrow.style.transform = 'rotate(180deg)';
-    }
-    
-    // Add necessary styles
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes fadeOut {
-            0% { opacity: 1; }
-            70% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-    
-        @keyframes slideIn {
-            to {
-                opacity: 1;
-                transform: translateX(0);
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'bowlero-fun-station';
+        nameDiv.textContent = newTransaction.name;
+
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'flex-spending';
+        categoryDiv.innerHTML = `
+            <div class="ellipse-parent">
+                <div class="group-child"></div>
+                <img class="party-hat-icon" alt="" src="icons/${categoryIcons[newTransaction.category]}">
+            </div>
+            <b class="flex-spending1">${newTransaction.category}</b>
+        `;
+
+        const amountDiv = document.createElement('div');
+        amountDiv.className = 'amount';
+        amountDiv.innerHTML = `
+            <div class="amount-child"></div>
+            <b class="b">-$${Math.abs(newTransaction.amount).toFixed(2)}</b>
+        `;
+
+        // Insert new elements at the top (after the header)
+        function insertAfterHeader(container, newElement) {
+            const header = container.querySelector('b');
+            if (header && header.nextSibling) {
+                container.insertBefore(newElement, header.nextSibling);
             }
         }
-    
-        .success-message {
-            animation: fadeOut 3s forwards;
-        }
-    
-        #pieChartContainer {
-            width: 300px;
-            height: 300px;
-            margin: 0 auto;
-            position: relative;
-        }
-    
-        .amount, .march-22-2024, .bowlero-fun-station, .flex-spending {
-            transition: all 0.3s ease;
-        }
-    
-        .amount:hover, .march-22-2024:hover, .bowlero-fun-station:hover, .flex-spending:hover {
-            transform: translateX(5px);
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-    `;
-    document.head.appendChild(style);
-    
-    function updateTotal() {
-        const total = Array.from(inputs).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
-        totalDisplay.textContent = `$${total.toFixed(2)}`;
+
+        insertAfterHeader(datesContainer, dateDiv);
+        insertAfterHeader(namesContainer, nameDiv);
+        insertAfterHeader(categoriesContainer, categoryDiv);
+        insertAfterHeader(amountsContainer, amountDiv);
+
+        // Remove oldest entries if more than 5 transactions
+        const maxTransactions = 5;
+        [datesContainer, namesContainer, categoriesContainer, amountsContainer].forEach(container => {
+            while (container.children.length > maxTransactions + 1) { // +1 for the header
+                container.removeChild(container.lastChild);
+            }
+        });
     }
-    
-    inputs.forEach(input => {
-        input.addEventListener('input', updateTotal);
+
+    // Load saved transactions on page load
+    const savedTransactions = localStorage.getItem('transactions');
+    if (savedTransactions) {
+        transactions = JSON.parse(savedTransactions);
+        transactions.forEach(transaction => {
+            updateRecentTransactions(transaction);
+        });
+        initializePieChart();
+    }
+
+    // Listen for budget updates
+    window.addEventListener('budgetsSaved', function() {
+        initializePieChart();
     });
-    
-    // Handle form submission
-    const form = modal.querySelector('#budget-setup-form');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-    
-        // Get values from form
-        const budgetAmounts = {
-            'Groceries': parseFloat(document.getElementById('groceries').value),
-            'Rent': parseFloat(document.getElementById('rent').value),
-            'Gas': parseFloat(document.getElementById('gas').value),
-            'Flex-Spending': parseFloat(document.getElementById('flex-spending').value),
-            'Entertainment': parseFloat(document.getElementById('entertainment').value)
-        };
-    
-        // Store in localStorage
-        localStorage.setItem('budgetAmounts', JSON.stringify(budgetAmounts));
-        localStorage.setItem('initialSetupComplete', 'true');
-    
-        // Initialize dashboard with these values
-        initializeDashboard(budgetAmounts);
-    });
-    
-    });
+
+    // Initialize chart if budgets exist
+    const savedBudgets = localStorage.getItem('categoryBudgets');
+    if (savedBudgets) {
+        initializePieChart();
+    }
+});
