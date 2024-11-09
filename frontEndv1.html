@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+    <title> Penny Pincher Final</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, width=device-width">
+    
+    <link rel="stylesheet" href="./index.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" />
+    
+    <!-- Add Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="backgorund-parent">
+        <div class="backgorund">
+            <div class="backgorund1"></div>
+            <div class="dashboard-dropdown">
+                <div class="dashboard-dropdown-child"></div>
+                <b class="dashboard">Dashboard</b>
+                <div class="welcome-back-jason">Welcome back, Jason! Here are your latest transactions.</div>
+            </div>
+            <div class="sidebar">
+                <div class="sidebar1"></div>
+                <div class="dashboard1">Dashboard</div>
+                <div class="sidebar-child"></div>
+                <div class="sidebar-item"></div>
+                <div class="budget-calculator">Budget Calculator</div>
+                <div class="profile">Profile</div>
+            </div>
+        </div>
+        <div class="background">
+            <div class="background-child"></div>
+            <div class="background-item"></div>
+            <div class="background-inner"></div>
+            <div class="line-div"></div>
+            <div class="background-child1"></div>
+            <div class="background-child2"></div>
+            <div class="background-child3"></div>
+            <div class="sections">
+                <div class="dates">
+                    <b class="date">Date</b>
+                    <div class="march-22-2024">March 22, 2024</div>
+                    <div class="march-20-2024">March 20, 2024</div>
+                    <div class="march-22-2024">March 15, 2024</div>
+                    <div class="march-20-2024">March 10, 2024</div>
+                    <div class="march-1-2024">March 1, 2024</div>
+                </div>
+                <div class="name">
+                    <b class="date">Name</b>
+                    <div class="bowlero-fun-station">Bowlero Fun Station</div>
+                    <div class="bowlero-fun-station">Food Lion</div>
+                    <div class="bowlero-fun-station">Speedway</div>
+                    <div class="bowlero-fun-station">ACME Comics</div>
+                    <div class="spartan-villages-xxx">Spartan Villages XXX</div>
+                </div>
+                <div class="category">
+                    <b class="category1">Category</b>
+                    <div class="flex-spending">
+                        <div class="ellipse-parent">
+                            <div class="group-child"></div>
+                            <img class="party-hat-icon" alt="" src="icons/Party Hat.png">
+                        </div>
+                        <b class="flex-spending1">Flex-Spending</b>
+                    </div>
+                    <div class="flex-spending">
+                        <div class="ellipse-parent">
+                            <div class="group-wrapper">
+                                <div class="group-wrapper">
+                                    <img class="house-icon" alt="" src="icons/House.png">
+                                    <div class="group-wrapper">
+                                        <div class="group-item"></div>
+                                        <img class="house-icon" alt="" src="icons/Grocery.png">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <b class="groceries1">Groceries</b>
+                    </div>
+                    <div class="flex-spending">
+                        <div class="ellipse-parent">
+                            <div class="group-wrapper">
+                                <img class="party-hat-icon1" alt="" src="icons/Party Hat.png">
+                                <div class="group-wrapper">
+                                    <div class="group-inner"></div>
+                                    <img class="house-icon" alt="" src="icons/gas station.png">
+                                </div>
+                            </div>
+                        </div>
+                        <b class="gas1">Gas</b>
+                    </div>
+                    <div class="flex-spending">
+                        <div class="ellipse-parent">
+                            <div class="group-child"></div>
+                            <img class="party-hat-icon" alt="" src="icons/Party Hat.png">
+                        </div>
+                        <b class="flex-spending1">Flex-Spending</b>
+                    </div>
+                    <div class="flex-spending">
+                        <div class="ellipse-parent">
+                            <div class="group-wrapper">
+                                <div class="group-child1"></div>
+                                <img class="party-hat-icon" alt="" src="icons/House.png">
+                            </div>
+                        </div>
+                        <b class="rent1">Rent</b>
+                    </div>
+                </div>
+                <div class="amounts">
+                    <b class="amounts1">Amounts</b>
+                    <div class="amount">
+                        <div class="amount-child"></div>
+                        <b class="b">-$44.53</b>
+                    </div>
+                    <div class="amount">
+                        <div class="amount-child"></div>
+                        <b class="b">-$132.12</b>
+                    </div>
+                    <div class="amount">
+                        <div class="amount-child"></div>
+                        <b class="b">-$30.00</b>
+                    </div>
+                    <div class="amount">
+                        <div class="amount-child"></div>
+                        <b class="b3">-$12.68</b>
+                    </div>
+                    <div class="amount">
+                        <div class="amount-child"></div>
+                        <b class="b4">-$928.23</b>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="logo">
+            <div class="background1"></div>
+            <div class="logo-child"></div>
+            <div class="logo1">
+                <div class="penny-pinch">Penny Pinch</div>
+                <img class="image-icon" alt="" src="icons/penny.png">
+            </div>
+        </div>
+        
+        <!-- Pie Chart Area -->
+        <div class="pie-chart-area">
+            <div class="pie-chart-area-child"></div>
+            <div class="pie-chart">
+                <div id="pieChartContainer">
+                    <canvas id="budgetPieChart"></canvas>
+                </div>
+                <div class="budget-allocation">BUDGET ALLOCATION</div>
+                <div class="pie-chart-legend"></div>
+                <div class="total-spent">
+                    <span class="label">Total Spent: </span>
+                    <span class="amount" id="totalSpent">$0.00</span>
+                </div>
+                <div class="category-breakdown"></div>
+            </div>
+        </div>
+
+        <!-- Transaction Input Form -->
+        <div class="transaction-input">
+            <div class="transaction-input-child"></div>
+            <b class="add-new-transaction">Add New Transaction</b>
+
+            <div class="submit-button">
+                <div class="submit-button-child"></div>
+                <button class="submit">Submit</button>
+            </div>
+
+            <div class="date-inpurt-parent">
+                <!-- Date input -->
+                <div class="date-inpurt">
+                    <input type="date" class="date-inpurt-child" />
+                    <label class="date1">Date</label>
+                </div>
+
+                <!-- Amount input -->
+                <div class="amount-input">
+                    <input type="number" step="0.01" class="date-inpurt-child" placeholder="0.00" />
+                    <label class="amount5">Amount</label>
+                </div>
+
+                <!-- Name input -->
+                <div class="name-input">
+                    <input type="text" class="name-input-child" placeholder="Transaction Name" />
+                    <label class="name2">Name</label>
+                </div>
+
+                <!-- Category input -->
+                <div class="cateogry-input">
+                    <select class="name-input-child">
+                        <option value="" disabled selected>Select Category</option>
+                        <option value="Groceries">Groceries</option>
+                        <option value="Rent">Rent</option>
+                        <option value="Gas">Gas</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Flex-Spending">Flex-Spending</option>
+                    </select>
+                    <label class="name2">Category</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add your JavaScript file -->
+    <script src="index.js"></script>
+</body>
+</html>
