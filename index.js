@@ -21,6 +21,28 @@ document.addEventListener('DOMContentLoaded', function() {
         'Flex-Spending': 'Party Hat.png'
     };
 
+    // Create custom tooltip div if it doesn't exist
+    let tooltipEl = document.getElementById('chartTooltip');
+    if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.id = 'chartTooltip';
+        tooltipEl.style.cssText = `
+            opacity: 0;
+            background: rgba(255, 255, 255, 0.95);
+            position: absolute;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-family: Manrope;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 300px;
+            margin-top: 16px;
+        `;
+        document.querySelector('.pie-chart').appendChild(tooltipEl);
+    }
+
     function initializePieChart() {
         const ctx = document.getElementById('budgetPieChart').getContext('2d');
         const savedBudgets = JSON.parse(localStorage.getItem('categoryBudgets')) || {};
@@ -50,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pieChart.destroy();
         }
 
-        // Create new chart with updated tooltip configuration
+        // Create new chart with custom tooltip
         pieChart = new Chart(ctx, {
             type: 'doughnut',
             data: data,
@@ -62,46 +84,56 @@ document.addEventListener('DOMContentLoaded', function() {
                         position: 'bottom'
                     },
                     tooltip: {
-                        enabled: true,
-                        position: 'nearest',
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        titleColor: '#333',
-                        bodyColor: '#333',
-                        titleFont: {
-                            size: 16,
-                            weight: 'bold',
-                            family: 'Manrope'
-                        },
-                        bodyFont: {
-                            size: 14,
-                            family: 'Manrope'
-                        },
-                        padding: 12,
-                        boxPadding: 8,
-                        borderColor: '#ddd',
-                        borderWidth: 1,
-                        displayColors: true,
-                        callbacks: {
-                            title: function(tooltipItems) {
-                                return tooltipItems[0].label;
-                            },
-                            label: function(context) {
-                                const category = context.label;
-                                const totalBudget = savedBudgets[category];
-                                const spent = categorySpending[category] || 0;
-                                const remaining = totalBudget - spent;
-                                return [
-                                    `Budget: $${totalBudget.toFixed(2)}`,
-                                    `Spent: $${spent.toFixed(2)}`,
-                                    `Remaining: $${remaining.toFixed(2)}`
-                                ];
+                        enabled: false, // Disable default tooltip
+                        external: function(context) {
+                            const {chart, tooltip} = context;
+                            
+                            if (tooltip.opacity === 0) {
+                                tooltipEl.style.opacity = 0;
+                                return;
                             }
-                        },
-                        // Custom positioning to avoid chart edges
-                        caretSize: 8,
-                        caretPadding: 6,
-                        xAlign: 'center',
-                        yAlign: 'bottom'
+
+                            const category = tooltip.title[0];
+                            const totalBudget = savedBudgets[category];
+                            const spent = categorySpending[category] || 0;
+                            const remaining = totalBudget - spent;
+                            
+                            // Position below "Total Spent" text
+                            const totalSpentEl = document.getElementById('totalSpent');
+                            const chartContainer = document.querySelector('.pie-chart');
+                            const containerRect = chartContainer.getBoundingClientRect();
+                            const totalSpentRect = totalSpentEl.getBoundingClientRect();
+                            
+                            tooltipEl.style.left = '50%';
+                            tooltipEl.style.transform = 'translateX(-50%)';
+                            tooltipEl.style.top = `${totalSpentEl.offsetTop + totalSpentRect.height}px`;
+
+                            // Update tooltip content
+                            tooltipEl.innerHTML = `
+                                <div style="margin-bottom: 8px;">
+                                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                        <div style="width: 12px; height: 12px; background: ${categoryColors[category]}; margin-right: 8px; border-radius: 2px;"></div>
+                                        <span style="font-size: 16px; font-weight: bold; color: #333;">${category}</span>
+                                    </div>
+                                    <div style="color: #555; font-size: 14px; margin-left: 20px;">
+                                        <div style="margin-bottom: 4px;">Budget: $${totalBudget.toFixed(2)}</div>
+                                        <div style="margin-bottom: 4px;">Spent: $${spent.toFixed(2)}</div>
+                                        <div>Remaining: $${remaining.toFixed(2)}</div>
+                                    </div>
+                                </div>
+                            `;
+
+                            tooltipEl.style.opacity = 1;
+                        }
+                    }
+                },
+                onHover: function(event, elements) {
+                    const chartContainer = document.querySelector('.pie-chart');
+                    if (elements && elements.length) {
+                        chartContainer.style.cursor = 'pointer';
+                    } else {
+                        chartContainer.style.cursor = 'default';
+                        tooltipEl.style.opacity = 0;
                     }
                 }
             }
