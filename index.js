@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pieChart.destroy();
         }
 
-        // Create new chart
+        // Create new chart with updated tooltip configuration
         pieChart = new Chart(ctx, {
             type: 'doughnut',
             data: data,
@@ -62,20 +62,46 @@ document.addEventListener('DOMContentLoaded', function() {
                         position: 'bottom'
                     },
                     tooltip: {
+                        enabled: true,
+                        position: 'nearest',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#333',
+                        bodyColor: '#333',
+                        titleFont: {
+                            size: 16,
+                            weight: 'bold',
+                            family: 'Manrope'
+                        },
+                        bodyFont: {
+                            size: 14,
+                            family: 'Manrope'
+                        },
+                        padding: 12,
+                        boxPadding: 8,
+                        borderColor: '#ddd',
+                        borderWidth: 1,
+                        displayColors: true,
                         callbacks: {
+                            title: function(tooltipItems) {
+                                return tooltipItems[0].label;
+                            },
                             label: function(context) {
                                 const category = context.label;
                                 const totalBudget = savedBudgets[category];
                                 const spent = categorySpending[category] || 0;
                                 const remaining = totalBudget - spent;
                                 return [
-                                    `${category}:`,
                                     `Budget: $${totalBudget.toFixed(2)}`,
                                     `Spent: $${spent.toFixed(2)}`,
                                     `Remaining: $${remaining.toFixed(2)}`
                                 ];
                             }
-                        }
+                        },
+                        // Custom positioning to avoid chart edges
+                        caretSize: 8,
+                        caretPadding: 6,
+                        xAlign: 'center',
+                        yAlign: 'bottom'
                     }
                 }
             }
